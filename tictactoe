@@ -1,0 +1,307 @@
+using System;
+using System.Collections.Generic;
+using System.Data.Common;
+using System.Linq;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace tictactoe
+{
+    internal class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.BackgroundColor = ConsoleColor.Red;
+            Console.Clear();
+            String play_again="yes";
+            while (play_again.Equals("yes")){
+
+                char[,] board = {
+                {'1', '2', '3'},
+                {'4', '5', '6'},
+                {'7', '8', '9'}
+            };
+            Console.WriteLine("welcome to tik!! tak!! toe!!");
+            Random random = new Random();
+            int xo = random.Next(0, 2);
+            int counter = 9;
+            char player;
+            char computer;
+            int choice = 0;
+            int comp_choice = 0;
+            Console.WriteLine("please choose the difficulty : medium-hard");
+            string difficulty = Console.ReadLine().ToLower();
+            if (xo == 0)
+            {
+                Console.WriteLine("you got X!! you start.. choose from 1 to 9");
+                player = 'X'; computer = 'O';
+                viewboard(board);
+                choice = Convert.ToInt32(Console.ReadLine());
+                addboard(board, choice, player);
+                viewboard(board);
+                counter--;
+            }
+            else
+            {
+                Console.WriteLine("you got O!! computer starts..");
+                player = 'O'; computer = 'X';
+            }
+            while (counter > 0)
+            {
+                comp_choice = comp(board, computer, player, difficulty);
+
+                addboard(board, comp_choice, computer);
+                counter--;
+
+
+                if (checkwin(board) == true)
+                {
+                    Console.WriteLine("computer wins <:(..");
+                    viewboard(board);
+                    break;
+                }
+
+                viewboard(board);
+                if (counter > 0)
+                {
+                    Console.WriteLine("your turn please choose");
+
+
+                    choice = Convert.ToInt32(Console.ReadLine());
+                    addboard(board, choice, player);
+
+                    counter--;
+                    if (checkwin(board) == true)
+                    {
+                        Console.WriteLine("You win <:)..");
+                        viewboard(board);
+                        break;
+                    }
+                    viewboard(board);
+                }
+            }
+            if (checkwin(board) != true)
+            {
+                Console.WriteLine("its draw :( what a bummer...");
+                viewboard(board);
+            }
+
+
+            Console.WriteLine("wanna play again?...type yes or no");
+            play_again = Console.ReadLine().ToLower();
+                Console.Clear(); 
+
+            }
+
+            Console.ReadKey();
+        }
+         
+        
+
+
+        
+        public static void viewboard(char[,] board)
+        {
+            int startx = 55;
+            int starty = 5;
+            for (int row = 0; row < 3; row++)
+            {
+                Console.SetCursorPosition(startx, starty + (row * 2)); 
+                for (int col = 0; col < 3; col++)
+                {
+                    Console.Write($" {board[row, col]} "); 
+                    if (col < 2) Console.Write("|");     
+                }
+
+                
+                if (row < 2)
+                {
+                    Console.SetCursorPosition(startx, starty + (row * 2) + 1); 
+                    Console.WriteLine("---|---|---");
+                }
+            }
+            Console.WriteLine("\n");
+        }
+       public static char[,] addboard(char[,] board, int choice, char user)
+{
+    while (true) 
+    {
+        int row = (choice - 1) / 3;
+        int column = (choice - 1) % 3;
+
+        if (board[row, column] != 'X' && board[row, column] != 'O')
+        {
+            board[row, column] = user;
+            return board; 
+        }
+
+        Console.WriteLine("That spot is taken, try again: ");
+        choice = Convert.ToInt32(Console.ReadLine()); 
+    }
+}
+
+
+
+        
+
+
+
+
+
+
+        public static Boolean checkwin(char[,] board)
+        {
+            if (board[0, 0] == board[1,1]&& board[0, 0] == board[2,2])
+            {
+                return true;
+            }
+            if (board[2, 0] == board[1,1]&& board[2, 0] == board[0, 2])
+            {
+                return true;
+            }
+            for(int row = 0;row<3;row++)
+            {
+                if (board[row, 0] == board[row, 1]&& board[row,  1] == board[row, 2] )
+                    {
+                        return true;
+                    }
+                }
+
+            for (int column = 0; column < 3; column++)
+                 { 
+                
+                if (board[0, column] == board[ 1, column] && board[ 1, column] == board[ 2, column])
+                {
+                        return true;
+                }
+            }
+            return false;
+        }
+
+        public static int comp(char[,] board, char computer, char player, string difficulty)
+        {
+            Random rand = new Random();
+            int bestScore = int.MinValue;
+            int bestMove = -1;
+            List<int> possibleMoves = new List<int>();
+
+            for (int i = 1; i <= 9; i++)
+            {
+                int row = (i - 1) / 3;
+                int col = (i - 1) % 3;
+
+                if (board[row, col] != 'X' && board[row, col] != 'O')
+                {
+                    possibleMoves.Add(i);
+
+                    if (difficulty != "easy")
+                    {
+                        board[row, col] = computer; 
+                        int score = minimax(board, false, computer, player);
+                        board[row, col] = (char)(i + '0');
+
+                        if (score > bestScore)
+                        {
+                            bestScore = score;
+                            bestMove = i;
+                        }
+                    }
+                    
+                }
+            }
+
+            int decision = rand.Next(0, 100);
+
+            if (difficulty == "hard")
+            {
+                return bestMove;
+            }
+            else if (difficulty == "medium")
+            {
+                if (decision < 30)
+                {
+                    return possibleMoves[rand.Next(possibleMoves.Count)];
+                }
+                return bestMove;
+            }
+            else
+            {
+                if (decision < 70)
+                {
+                    return possibleMoves[rand.Next(possibleMoves.Count)];
+                }
+                return bestMove;
+            }
+        }
+
+
+
+
+        public static int minimax(char[,] board, bool isMaximizing, char aiPlayer, char humanPlayer)
+        {
+            if (checkwin(board))
+            {
+                return isMaximizing ? -1 : 1; 
+            }
+
+            
+            bool isDraw = true;
+            for (int i = 1; i <= 9; i++)
+            {
+                int row = (i - 1) / 3;
+                int col = (i - 1) % 3;
+                if (board[row, col] != 'X' && board[row, col] != 'O')
+                {
+                    isDraw = false;
+                    break;
+                }
+            }
+            if (isDraw) return 0; 
+
+            if (isMaximizing)
+            {
+                int bestScore = int.MinValue;
+                for (int i = 1; i <= 9; i++)
+                {
+                    int row = (i - 1) / 3;
+                    int col = (i - 1) % 3;
+
+                    if (board[row, col] != 'X' && board[row, col] != 'O')
+                    {
+                        board[row, col] = aiPlayer;
+                        int score = minimax(board, false, aiPlayer, humanPlayer);
+                        board[row, col] = (char)(i + '0'); 
+                        bestScore = Math.Max(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+            else
+            {
+                int bestScore = int.MaxValue;
+                for (int i = 1; i <= 9; i++)
+                {
+                    int row = (i - 1) / 3;
+                    int col = (i - 1) % 3;
+
+                    if (board[row, col] != 'X' && board[row, col] != 'O')
+                    {
+                        board[row, col] = humanPlayer;
+                        int score = minimax(board, true, aiPlayer, humanPlayer);
+                        board[row, col] = (char)(i + '0'); 
+                        bestScore = Math.Min(score, bestScore);
+                    }
+                }
+                return bestScore;
+            }
+        }
+
+
+
+
+
+
+    }
+}
